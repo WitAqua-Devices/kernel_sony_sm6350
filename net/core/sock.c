@@ -1449,6 +1449,10 @@ int sock_getsockopt(struct socket *sock, int level, int optname,
 				  SOF_TXTIME_REPORT_ERRORS : 0;
 		break;
 
+	case SO_BINDTOIFINDEX:
+		v.val = sk->sk_bound_dev_if;
+		break;
+
 	default:
 		/* We implement the SO_SNDLOWAT etc to not be settable
 		 * (1003.1g 7).

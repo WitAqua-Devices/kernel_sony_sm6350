@@ -635,6 +635,7 @@ static struct bpf_map *bpf_sk_storage_map_alloc(union bpf_attr *attr)
 	struct bpf_sk_storage_map *smap;
 	unsigned int i;
 	u32 nbuckets;
+	u32 pages;
 	u64 cost;
 	int ret;
 

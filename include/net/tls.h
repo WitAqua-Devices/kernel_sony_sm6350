@@ -139,14 +139,16 @@ struct tls_sw_context_tx {
 struct tls_sw_context_rx {
 	struct crypto_aead *aead_recv;
 	struct crypto_wait async_wait;
-
 	struct strparser strp;
+	struct sk_buff_head rx_list;	/* list of decrypted 'data' records */
 	void (*saved_data_ready)(struct sock *sk);
-	unsigned int (*sk_poll)(struct file *file, struct socket *sock,
-				struct poll_table_struct *wait);
+
 	struct sk_buff *recv_pkt;
 	u8 control;
+	int async_capable;
 	bool decrypted;
+	atomic_t decrypt_pending;
+	bool async_notify;
 };
 
 struct tls_record_info {
@@ -281,8 +283,7 @@ void tls_sw_free_resources_rx(struct sock *sk);
 void tls_sw_release_resources_rx(struct sock *sk);
 int tls_sw_recvmsg(struct sock *sk, struct msghdr *msg, size_t len,
 		   int nonblock, int flags, int *addr_len);
-unsigned int tls_sw_poll(struct file *file, struct socket *sock,
-			 struct poll_table_struct *wait);
+bool tls_sw_stream_read(const struct sock *sk);
 ssize_t tls_sw_splice_read(struct socket *sock, loff_t *ppos,
 			   struct pipe_inode_info *pipe,
 			   size_t len, unsigned int flags);
@@ -464,6 +465,27 @@ tls_offload_ctx_tx(const struct tls_context *tls_ctx)
 {
 	return (struct tls_offload_context_tx *)tls_ctx->priv_ctx_tx;
 }
+
+static inline bool tls_sw_has_ctx_tx(const struct sock *sk)
+{
+	struct tls_context *ctx = tls_get_ctx(sk);
+
+	if (!ctx)
+		return false;
+	return !!tls_sw_ctx_tx(ctx);
+}
+
+static inline bool tls_sw_has_ctx_rx(const struct sock *sk)
+{
+	struct tls_context *ctx = tls_get_ctx(sk);
+
+	if (!ctx)
+		return false;
+	return !!tls_sw_ctx_rx(ctx);
+}
+
+void tls_sw_write_space(struct sock *sk, struct tls_context *ctx);
+void tls_device_write_space(struct sock *sk, struct tls_context *ctx);
 
 static inline struct tls_offload_context_rx *
 tls_offload_ctx_rx(const struct tls_context *tls_ctx)

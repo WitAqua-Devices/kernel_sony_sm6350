@@ -81,6 +81,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <linux/inetdevice.h>
+#include <linux/btf_ids.h>
 
 #include <crypto/hash.h>
 #include <linux/scatterlist.h>

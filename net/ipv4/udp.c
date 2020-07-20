@@ -110,6 +110,7 @@
 #include <net/xfrm.h>
 #include <trace/events/udp.h>
 #include <linux/static_key.h>
+#include <linux/btf_ids.h>
 #include <trace/events/skb.h>
 #include <net/busy_poll.h>
 #include "udp_impl.h"

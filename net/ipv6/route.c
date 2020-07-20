@@ -66,6 +66,7 @@
 #include <net/l3mdev.h>
 #include <net/ip.h>
 #include <linux/uaccess.h>
+#include <linux/btf_ids.h>
 
 #ifdef CONFIG_SYSCTL
 #include <linux/sysctl.h>

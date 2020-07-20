@@ -64,6 +64,7 @@
 #include <linux/genetlink.h>
 #include <linux/net_namespace.h>
 #include <linux/nospec.h>
+#include <linux/btf_ids.h>
 
 #include <net/net_namespace.h>
 #include <net/netns/generic.h>

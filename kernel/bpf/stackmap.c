@@ -10,6 +10,7 @@
 #include <linux/irq_work.h>
 #include <linux/btf_ids.h>
 #include <linux/buildid.h>
+#include <linux/mmap_lock.h>
 #include "percpu_freelist.h"
 
 #define STACK_CREATE_FLAG_MASK					\

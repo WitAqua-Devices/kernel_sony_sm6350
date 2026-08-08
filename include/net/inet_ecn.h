@@ -100,6 +100,20 @@ static inline int IP_ECN_set_ce(struct iphdr *iph)
 	return 1;
 }
 
+static inline int IP_ECN_set_ect1(struct iphdr *iph)
+{
+	u32 check = (__force u32)iph->check;
+
+	if ((iph->tos & INET_ECN_MASK) != INET_ECN_ECT_0)
+		return 0;
+
+	check += (__force u16)htons(0x100);
+
+	iph->check = (__force __sum16)(check + (check>=0xFFFF));
+	iph->tos ^= INET_ECN_MASK;
+	return 1;
+}
+
 static inline void IP_ECN_clear(struct iphdr *iph)
 {
 	iph->tos &= ~INET_ECN_MASK;
@@ -128,6 +142,22 @@ static inline int IP6_ECN_set_ce(struct sk_buff *skb, struct ipv6hdr *iph)
 
 	from = *(__be32 *)iph;
 	to = from | htonl(INET_ECN_CE << 20);
+	*(__be32 *)iph = to;
+	if (skb->ip_summed == CHECKSUM_COMPLETE)
+		skb->csum = csum_add(csum_sub(skb->csum, (__force __wsum)from),
+				     (__force __wsum)to);
+	return 1;
+}
+
+static inline int IP6_ECN_set_ect1(struct sk_buff *skb, struct ipv6hdr *iph)
+{
+	__be32 from, to;
+
+	if ((ipv6_get_dsfield(iph) & INET_ECN_MASK) != INET_ECN_ECT_0)
+		return 0;
+
+	from = *(__be32 *)iph;
+	to = from ^ htonl(INET_ECN_MASK << 20);
 	*(__be32 *)iph = to;
 	if (skb->ip_summed == CHECKSUM_COMPLETE)
 		skb->csum = csum_add(csum_sub(skb->csum, (__force __wsum)from),

@@ -535,7 +535,7 @@ static inline int dvb_dmx_swfilter_payload(struct dvb_demux_feed *feed,
 		ccok = ((feed->cc + 1) & 0x0f) == cc;
 
 	if (!ccok) {
-		set_buf_flags(feed, DMX_BUFFER_FLAG_DISCONTINUITY_DETECTED);
+		set_buf_flags(feed, DMX_BUF_FLAG_DISCONTINUITY_DETECTED);
 		dprintk_sect_loss("missed packet: %d instead of %d!\n",
 				  cc, (feed->cc + 1) & 0x0f);
 	}

@@ -1118,6 +1118,8 @@ static void ax88179_rx_fixup
 find_next_rx:
 		rx_data += (pkt_len + 7) & 0xFFF8;
 	}
+
+	return 0;
 }
 
 static int ax88179_system_suspend(struct ax_device *axdev)

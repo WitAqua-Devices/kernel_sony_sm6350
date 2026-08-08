@@ -32,8 +32,9 @@
 
 bool seg6_validate_srh(struct ipv6_sr_hdr *srh, int len, bool reduced)
 {
-	int trailing;
 	unsigned int tlv_offset;
+	int max_last_entry;
+	int trailing;
 
 	if (srh->type != IPV6_SRCRT_TYPE_4)
 		return false;

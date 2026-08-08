@@ -73,6 +73,24 @@ enum lsm_event {
 	LSM_POLICY_CHANGE,
 };
 
+/*
+ * Reasons that can be passed to security_locked_down().  This tree has no
+ * lockdown LSM, so nothing ever refuses; the enum exists so that the BPF
+ * backports keep upstream's spelling.
+ */
+enum lockdown_reason {
+	LOCKDOWN_NONE,
+	LOCKDOWN_BPF_WRITE_USER,
+	LOCKDOWN_INTEGRITY_MAX,
+	LOCKDOWN_BPF_READ,
+	LOCKDOWN_CONFIDENTIALITY_MAX,
+};
+
+static inline int security_locked_down(enum lockdown_reason what)
+{
+	return 0;
+}
+
 /* These functions are in security/commoncap.c */
 extern int cap_capable(const struct cred *cred, struct user_namespace *ns,
 		       int cap, unsigned int opts);

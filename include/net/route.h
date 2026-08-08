@@ -29,6 +29,7 @@
 #include <net/flow.h>
 #include <net/inet_sock.h>
 #include <net/ip_fib.h>
+#include <net/arp.h>
 #include <linux/in_route.h>
 #include <linux/rtnetlink.h>
 #include <linux/rcupdate.h>
@@ -346,6 +347,35 @@ static inline int ip4_dst_hoplimit(const struct dst_entry *dst)
 	if (hoplimit == 0)
 		hoplimit = net->ipv4.sysctl_ip_default_ttl;
 	return hoplimit;
+}
+
+static inline struct neighbour *ip_neigh_gw4(struct net_device *dev,
+					     __be32 daddr)
+{
+	struct neighbour *neigh;
+
+	neigh = __ipv4_neigh_lookup_noref(dev, daddr);
+	if (unlikely(!neigh))
+		neigh = __neigh_create(&arp_tbl, &daddr, dev, false);
+
+	return neigh;
+}
+
+/* This tree keeps the v4 gateway in rt_gateway, so there is no v6 nexthop
+ * to consider.  *is_v6gw is still cleared for callers that pass it on to
+ * neigh_output() in trees that do have one.
+ */
+static inline struct neighbour *ip_neigh_for_gw(struct rtable *rt,
+						struct sk_buff *skb,
+						bool *is_v6gw)
+{
+	struct net_device *dev = rt->dst.dev;
+
+	*is_v6gw = false;
+	if (likely(rt->rt_gateway))
+		return ip_neigh_gw4(dev, rt->rt_gateway);
+
+	return ip_neigh_gw4(dev, ip_hdr(skb)->daddr);
 }
 
 #endif	/* _ROUTE_H */

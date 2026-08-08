@@ -2233,7 +2233,7 @@ static int bpf_out_neigh_v6(struct net *net, struct sk_buff *skb,
 
 		sock_confirm_neigh(skb, neigh);
 		dev_xmit_recursion_inc();
-		ret = neigh_output(neigh, skb, false);
+		ret = neigh_output(neigh, skb);
 		dev_xmit_recursion_dec();
 		rcu_read_unlock_bh();
 		return ret;
@@ -2347,7 +2347,7 @@ static int bpf_out_neigh_v4(struct net *net, struct sk_buff *skb,
 
 		sock_confirm_neigh(skb, neigh);
 		dev_xmit_recursion_inc();
-		ret = neigh_output(neigh, skb, is_v6gw);
+		ret = neigh_output(neigh, skb);
 		dev_xmit_recursion_dec();
 		rcu_read_unlock_bh();
 		return ret;

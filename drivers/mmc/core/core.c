@@ -332,9 +332,12 @@ static bool mmc_is_valid_state_for_clk_scaling(struct mmc_host *host)
 	 * work properly as sending tuning command (CMD21) is illegal in
 	 * this mode.
 	 */
+	/*
+	 * 4.19.258 removed BKOPS support along with mmc_card_doing_bkops();
+	 * nothing sets that state any more, so the term is dropped.
+	 */
 	if (!card || (mmc_card_mmc(card) &&
-			(card->part_curr == EXT_CSD_PART_CONFIG_ACC_RPMB ||
-			mmc_card_doing_bkops(card))))
+			card->part_curr == EXT_CSD_PART_CONFIG_ACC_RPMB))
 		return false;
 
 	if (mmc_send_status(card, &status)) {

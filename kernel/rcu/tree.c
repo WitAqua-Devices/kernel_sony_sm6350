@@ -259,7 +259,6 @@ void rcu_softirq_qs(void)
 {
 	rcu_sched_qs();
 	rcu_preempt_qs();
-	rcu_preempt_deferred_qs(current);
 }
 
 /*

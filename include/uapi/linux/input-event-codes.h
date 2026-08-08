@@ -520,6 +520,18 @@
 #define KEY_INS_LINE		0x1c2
 #define KEY_DEL_LINE		0x1c3
 
+/* Sony's key block. KEY_AI and KEY_G_ASSIST are two names Sony uses for
+ * the same code; the pdx213 device tree spells it KEY_AI, sec_ts spells
+ * it KEY_G_ASSIST.
+ */
+#define KEY_SIDE_GESTURE	0x1c6
+#define KEY_BLACK_UI_GESTURE	0x1c7
+#define KEY_MULTI		0x1c8
+#define KEY_AI			0x1c9
+#define KEY_G_ASSIST		0x1c9
+#define KEY_SIDE_GESTURE_RIGHT	0x1ca
+#define KEY_SIDE_GESTURE_LEFT	0x1cb
+
 #define KEY_FN			0x1d0
 #define KEY_FN_ESC		0x1d1
 #define KEY_FN_F1		0x1d2
@@ -770,6 +782,8 @@
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
 #define ABS_MT_TOOL_X		0x3c	/* Center X tool position */
 #define ABS_MT_TOOL_Y		0x3d	/* Center Y tool position */
+#define ABS_MT_CUSTOM		0x3e	/* custom event */
+#define ABS_MT_GRIP		0x3f	/* grip touch */
 
 
 #define ABS_MAX			0x3f
@@ -796,6 +810,7 @@
 #define SW_ROTATE_LOCK		0x0c  /* set = rotate locked/disabled */
 #define SW_LINEIN_INSERT	0x0d  /* set = inserted */
 #define SW_MUTE_DEVICE		0x0e  /* set = device disabled */
+#define SW_GLOVE		0x0f	/* set = glove mode */
 #define SW_PEN_INSERTED		0x0f  /* set = pen inserted */
 #define SW_MACHINE_COVER	0x10  /* set = cover closed */
 #define SW_HPHL_OVERCURRENT	0x11  /* set = over current on left hph */

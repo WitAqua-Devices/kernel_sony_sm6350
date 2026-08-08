@@ -185,6 +185,13 @@ struct input_dev {
 
 	unsigned int users;
 	bool going_away;
+	/*
+	 * Sony's trees carry this flag on input_dev and sec_ts reads it to
+	 * skip work while the device is off. Nothing in SODP ever sets it
+	 * either, so keep it as the same read-only stub rather than invent
+	 * a policy for it.
+	 */
+	bool disabled;
 
 	struct device dev;
 

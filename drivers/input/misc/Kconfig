@@ -885,4 +885,20 @@ config INPUT_SC27XX_VIBRA
 	  To compile this driver as a module, choose M here. The module will
 	  be called sc27xx_vibra.
 
+config INPUT_BU520X1NVX
+	tristate "BU520X1NVX driver support"
+	default n
+	help
+	  Say Y here
+	  if you want to
+	  support BU520X1NVX
+	  as bipolar detection device.
+
+config SENSORS_ET51X
+	tristate "ET51X fingerprint sensor support"
+	default n
+	help
+	  If you say yes here you get support for Egistec's
+	  fingerprint sensor ET51X.
+
 endif

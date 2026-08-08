@@ -1354,6 +1354,16 @@ source "drivers/input/touchscreen/synaptics_tcm/Kconfig"
 
 source "drivers/input/touchscreen/focaltech_touch/Kconfig"
 
+config TOUCHSCREEN_SAMSUNG_INCELL_LENA
+	tristate "SEC Incell Touchscreen for SoMC Lena devices"
+	depends on I2C
+	help
+	  Say Y here if you have a Samsung Electronics OLED panel in your
+	  SoMC Lena device, which features touch support. You will most
+	  likely have an incell touchscreen as well.
+
+	  If unsure, say N.
+
 source "drivers/input/touchscreen/nt36xxx/Kconfig"
 
 endif

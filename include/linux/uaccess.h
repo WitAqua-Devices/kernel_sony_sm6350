@@ -383,4 +383,34 @@ void __noreturn usercopy_abort(const char *name, const char *detail,
 			       unsigned long len);
 #endif
 
+/*
+ * Upstream renamed the probe_* helpers to copy_*_nofault() together with a
+ * maccess.c rewrite that this tree does not carry (it is still set_fs()
+ * based).  Keep the old implementation and only provide the new spelling so
+ * that the BPF backports apply unchanged.
+ */
+static inline long copy_from_kernel_nofault(void *dst, const void *src,
+					    size_t size)
+{
+	return probe_kernel_read(dst, src, size);
+}
+
+static inline long copy_to_kernel_nofault(void *dst, const void *src,
+					  size_t size)
+{
+	return probe_kernel_write(dst, src, size);
+}
+
+static inline long copy_from_user_nofault(void *dst, const void __user *src,
+					  size_t size)
+{
+	return probe_user_read(dst, src, size);
+}
+
+static inline long copy_to_user_nofault(void __user *dst, const void *src,
+					size_t size)
+{
+	return probe_user_write(dst, src, size);
+}
+
 #endif		/* __LINUX_UACCESS_H__ */

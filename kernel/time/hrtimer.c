@@ -1961,21 +1961,18 @@ static void migrate_hrtimer_list(struct hrtimer_clock_base *old_base,
 	}
 }
 
-static void __migrate_hrtimers(unsigned int scpu, bool remove_pinned)
+static void __migrate_hrtimers(struct hrtimer_cpu_base *old_base,
+			       struct hrtimer_cpu_base *new_base,
+			       int retrigger_cpu, bool remove_pinned)
 {
-	struct hrtimer_cpu_base *old_base, *new_base;
-	unsigned long flags;
 	int i;
 
-	local_irq_save(flags);
-	old_base = &per_cpu(hrtimer_bases, scpu);
-	new_base = this_cpu_ptr(&hrtimer_bases);
 	/*
 	 * The caller is globally serialized and nobody else
 	 * takes two locks at once, deadlock is not possible.
 	 */
-	raw_spin_lock(&new_base->lock);
-	raw_spin_lock_nested(&old_base->lock, SINGLE_DEPTH_NESTING);
+	raw_spin_lock(&old_base->lock);
+	raw_spin_lock_nested(&new_base->lock, SINGLE_DEPTH_NESTING);
 
 	for (i = 0; i < HRTIMER_MAX_CLOCK_BASES; i++) {
 		migrate_hrtimer_list(&old_base->clock_base[i],
@@ -1986,35 +1983,41 @@ static void __migrate_hrtimers(unsigned int scpu, bool remove_pinned)
 	 * The migration might have changed the first expiring softirq
 	 * timer on this CPU. Update it.
 	 */
-	hrtimer_update_softirq_timer(new_base, false);
+	__hrtimer_get_next_event(new_base, HRTIMER_ACTIVE_SOFT);
+	/* Tell the other CPU to retrigger the next event */
+	if (retrigger_cpu >= 0)
+		smp_call_function_single(retrigger_cpu, retrigger_next_event,
+					 NULL, 0);
 
-	raw_spin_unlock(&old_base->lock);
 	raw_spin_unlock(&new_base->lock);
-
-	/* Check, if we got expired work to do */
-	__hrtimer_peek_ahead_timers();
-	local_irq_restore(flags);
+	raw_spin_unlock(&old_base->lock);
 }
 
-int hrtimers_dead_cpu(unsigned int scpu)
+int hrtimers_cpu_dying(unsigned int dying_cpu)
 {
-	BUG_ON(cpu_online(scpu));
-	tick_cancel_sched_timer(scpu);
+	int ncpu = cpumask_first(cpu_active_mask);
 
-	/*
-	 * this BH disable ensures that raise_softirq_irqoff() does
-	 * not wakeup ksoftirqd (and acquire the pi-lock) while
-	 * holding the cpu_base lock
-	 */
-	local_bh_disable();
-	__migrate_hrtimers(scpu, true);
-	local_bh_enable();
+	tick_cancel_sched_timer(dying_cpu);
+
+	__migrate_hrtimers(this_cpu_ptr(&hrtimer_bases),
+			   &per_cpu(hrtimer_bases, ncpu), ncpu, true);
 	return 0;
 }
 
 void hrtimer_quiesce_cpu(void *cpup)
 {
-	__migrate_hrtimers(*(int *)cpup, false);
+	unsigned long flags;
+
+	/*
+	 * Unlike the hotplug teardown this runs on the CPU that takes the
+	 * timers over, so pull them in and retrigger locally.
+	 */
+	local_irq_save(flags);
+	__migrate_hrtimers(&per_cpu(hrtimer_bases, *(int *)cpup),
+			   this_cpu_ptr(&hrtimer_bases), -1, false);
+	/* Check, if we got expired work to do */
+	__hrtimer_peek_ahead_timers();
+	local_irq_restore(flags);
 }
 
 #endif /* CONFIG_HOTPLUG_CPU */

@@ -1262,21 +1262,22 @@ static const char *kvm_bhb_get_vecs_end(const char *start)
 		return __smccc_workaround_3_smc_end;
 	else if (start == __spectre_bhb_loop_k8_start)
 		return __spectre_bhb_loop_k8_end;
-else if (start == __spectre_bhb_loop_k24_start)
+	else if (start == __spectre_bhb_loop_k24_start)
 		return __spectre_bhb_loop_k24_end;
-else if (start == __spectre_bhb_loop_k32_start)
+	else if (start == __spectre_bhb_loop_k32_start)
 		return __spectre_bhb_loop_k32_end;
-else if (start == __spectre_bhb_clearbhb_start)
+	else if (start == __spectre_bhb_clearbhb_start)
 		return __spectre_bhb_clearbhb_end;
-	return NULL;
 
+	return NULL;
+}
 
 static void kvm_setup_bhb_slot(const char *hyp_vecs_start)
 {
 	int cpu, slot = -1;
 	const char *hyp_vecs_end;
 
-if (!IS_ENABLED(CONFIG_KVM) || !is_hyp_mode_available())
+	if (!IS_ENABLED(CONFIG_KVM) || !is_hyp_mode_available())
 		return;
 
 	hyp_vecs_end = kvm_bhb_get_vecs_end(hyp_vecs_start);

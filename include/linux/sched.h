@@ -365,6 +365,10 @@ enum uclamp_id {
 	UCLAMP_CNT
 };
 
+struct sched_param {
+	int sched_priority;
+};
+
 struct sched_info {
 #ifdef CONFIG_SCHED_INFO
 	/* Cumulative counters: */

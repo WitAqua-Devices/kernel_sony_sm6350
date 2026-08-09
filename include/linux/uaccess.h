@@ -392,7 +392,8 @@ void __noreturn usercopy_abort(const char *name, const char *detail,
 static inline long copy_from_kernel_nofault(void *dst, const void *src,
 					    size_t size)
 {
-	return probe_kernel_read(dst, src, size);
+	/* Upstream's version refuses user addresses; that is _strict here. */
+	return probe_kernel_read_strict(dst, src, size);
 }
 
 static inline long copy_to_kernel_nofault(void *dst, const void *src,

@@ -16,7 +16,6 @@
 #include <linux/mutex.h>
 #include <linux/sched.h>
 #include <linux/interrupt.h>
-#include <linux/nmi.h>
 #include <linux/irq.h>
 #include <linux/percpu.h>
 #include <linux/of.h>
@@ -762,16 +761,6 @@ static irqreturn_t wdog_bark_handler(int irq, void *dev_id)
 			(unsigned long) wdog_dd->last_pet, nanosec_rem / 1000);
 	if (wdog_dd->do_ipi_ping)
 		dump_cpu_alive_mask(wdog_dd);
-
-	/*
-	 * Bring-up only: bite straight away and pstore keeps nothing, so a
-	 * hang is indistinguishable from dying before pstore came up.  Go
-	 * through panic() instead - it hands the tail of the kernel log to
-	 * ramoops, and the panic notifier in this driver still arms the bite.
-	 */
-	trigger_all_cpu_backtrace();
-	show_state_filter(TASK_UNINTERRUPTIBLE);
-	panic("Watchdog bark");
 
 	msm_trigger_wdog_bite();
 	return IRQ_HANDLED;

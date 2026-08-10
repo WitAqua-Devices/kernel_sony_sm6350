@@ -40,7 +40,19 @@
 
 &pm7250b_qg {
 	qcom,battery-data = <&lena_batterydata>;
-	qcom,multi-profile-load;
+	/*
+	 * No qcom,multi-profile-load.  The property asks qg_post_init() to
+	 * build the state of health profile table, which needs every aged
+	 * profile to carry qcom,soh-range - and none of the six TDK profiles
+	 * above has one, on this tree or in the stock dtbo.  Sony gets away
+	 * with it because their kernel compiles qg_soh_batt_profile_init()
+	 * down to "return 0" under CONFIG_SOMC_CHARGER_EXTENSION and drives
+	 * the aged profiles from their own charger extension.  This tree is
+	 * plain CLO, so the call runs, of_batterydata_get_aged_profile_count()
+	 * returns -EINVAL, and qpnp_qg_probe() fails - which used to take the
+	 * whole boot down with it.  Ask for the single profile that the data
+	 * actually describes.
+	 */
 	somc,jeita-step-use-real-temp;
 	somc,jeita-batt-temp-correction = <0>;
 	qcom,qg-iterm-ma = <470>;

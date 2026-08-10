@@ -1,0 +1,8 @@
+#
+# Kernel module make instructions go here.
+#
+# The 65.1.A.5.xxx release builds this out of tree with obj-m and points
+# KBUILD_EXTRA_SYMBOLS at sn1x0_i2c/Module.symvers.  Built in tree from
+# drivers/nfc/Makefile, kbuild resolves the symbols on its own.
+obj-$(CONFIG_NXP_P73_DEVICES) += p73.o
+#ccflags-y := -DDEBUG

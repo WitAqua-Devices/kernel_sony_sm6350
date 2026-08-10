@@ -59,6 +59,8 @@ source "drivers/nfc/nxp-nci/Kconfig"
 source "drivers/nfc/s3fwrn5/Kconfig"
 source "drivers/nfc/st95hf/Kconfig"
 endmenu
+source "drivers/nfc/sn1x0_i2c/Kconfig"
+source "drivers/nfc/sn1x0_spi/Kconfig"
 
 config NFC_NQ
         tristate "QTI NCI based NFC Controller Driver for NQx"

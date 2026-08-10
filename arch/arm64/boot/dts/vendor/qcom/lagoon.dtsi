@@ -524,8 +524,23 @@
 			record-size = <0x1000>;
 			console-size = <0x40000>;
 			ftrace-size = <0x0>;
-			msg-size = <0x20000 0x20000>;
-			cc-size = <0x0>;
+			/*
+			 * CLO carried a downstream extension that took several
+			 * pmsg regions as "msg-size = <a b>", and "cc-size" for
+			 * the ECC.  The stable merges replaced ramoops_parse_dt()
+			 * with the upstream one, which only knows "pmsg-size"
+			 * and "ecc-size", so both properties above are read as
+			 * zero here.  That is not just a missing /dev/pmsg0: the
+			 * zones are laid out back to back from the start of the
+			 * region, so dropping 256K of pmsg moves the console
+			 * zone by that much and stretches the dump area over the
+			 * console of a kernel that does understand them.  Ask
+			 * for the same total under the names this tree parses,
+			 * so the layout stays byte for byte what the stock
+			 * kernel computes and pstore survives a reboot into it.
+			 */
+			pmsg-size = <0x40000>;
+			ecc-size = <0x0>;
 		};
 
 		cmdline_region: cmdline_region@ffd00000 {

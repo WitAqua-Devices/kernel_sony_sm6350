@@ -4207,18 +4207,6 @@ static irqreturn_t dwc3_check_event_buf(struct dwc3_event_buffer *evt)
 	start_time = ktime_get();
 	dwc->irq_cnt++;
 
-	if (pm_runtime_suspended(dwc->dev)) {
-		dwc->pending_events = true;
-		/*
-		 * Trigger runtime resume. The get() function will be balanced
-		 * after processing the pending events in dwc3_process_pending
-		 * events().
-		 */
-		pm_runtime_get(dwc->dev);
-		disable_irq_nosync(dwc->irq_gadget);
-		return IRQ_HANDLED;
-	}
-
 	/* controller reset is still pending */
 	if (dwc->err_evt_seen)
 		return IRQ_HANDLED;

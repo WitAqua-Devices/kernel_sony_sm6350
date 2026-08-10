@@ -4872,19 +4872,19 @@ static int qpnp_qg_probe(struct platform_device *pdev)
 	rc = qg_request_irqs(chip);
 	if (rc < 0) {
 		pr_err("Failed to register QG interrupts, rc=%d\n", rc);
-		goto fail_votable;
+		goto fail_psy;
 	}
 
 	rc = qg_post_init(chip);
 	if (rc < 0) {
 		pr_err("Failed in qg_post_init rc=%d\n", rc);
-		goto fail_votable;
+		goto fail_psy;
 	}
 
 	rc = sysfs_create_groups(&chip->dev->kobj, qg_groups);
 	if (rc < 0) {
 		pr_err("Failed to create sysfs files rc=%d\n", rc);
-		goto fail_votable;
+		goto fail_psy;
 	}
 
 	qg_get_battery_capacity(chip, &soc);
@@ -4896,6 +4896,13 @@ static int qpnp_qg_probe(struct platform_device *pdev)
 
 	return rc;
 
+fail_psy:
+	/*
+	 * chip is devm allocated, so leaving the notifier block registered
+	 * here hands power_supply_changed_work() a pointer into freed memory
+	 * and the first supply that changes jumps through it.
+	 */
+	power_supply_unreg_notifier(&chip->nb);
 fail_votable:
 	destroy_votable(chip->awake_votable);
 fail_device:
@@ -4912,6 +4919,7 @@ static int qpnp_qg_remove(struct platform_device *pdev)
 	qg_batterydata_exit();
 	qg_soc_exit(chip);
 
+	power_supply_unreg_notifier(&chip->nb);
 	cancel_delayed_work_sync(&chip->qg_sleep_exit_work);
 	cancel_work_sync(&chip->udata_work);
 	cancel_work_sync(&chip->qg_status_change_work);

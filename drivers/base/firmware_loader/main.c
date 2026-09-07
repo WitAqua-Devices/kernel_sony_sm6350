@@ -284,6 +284,12 @@ static void free_fw_priv(struct fw_priv *fw_priv)
 static char fw_path_para[256];
 static const char * const fw_path[] = {
 	fw_path_para,
+	/*
+	 * The Awinic amplifier asks for its register and monitor profiles by
+	 * bare name while the Sony release keeps them in a subdirectory, and
+	 * ueventd does not descend into one.
+	 */
+	"/vendor/firmware/awinic",
 	"/lib/firmware/updates/" UTS_RELEASE,
 	"/lib/firmware/updates",
 	"/lib/firmware/" UTS_RELEASE,

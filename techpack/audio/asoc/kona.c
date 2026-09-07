@@ -39,6 +39,8 @@
 #include <dt-bindings/sound/audio-codec-port-types.h>
 #include "codecs/bolero/wsa-macro.h"
 #include "kona-port-config.h"
+#include "codecs/awinic/aw882xx.h"
+#include "codecs/foursemi/fsm_public.h"
 
 #define DRV_NAME "kona-asoc-snd"
 #define __CHIPSET__ "KONA "
@@ -6877,6 +6879,83 @@ static struct snd_soc_dai_link ext_disp_be_dai_link[] = {
 	},
 };
 
+static struct snd_soc_dai_link_component awinic_codecs[] = {
+	{
+		.of_node = NULL,
+		.dai_name = "aw882xx-aif",
+		.name = "aw882xx_smartpa",
+	},
+};
+
+/*
+ * pdx213 carries either an Awinic aw882xx or a FourSemi fs16xx on the primary
+ * MI2S. Both are described in the device tree, so the one that answers on I2C
+ * decides which pair of back ends replaces the stub codec below.
+ */
+static struct snd_soc_dai_link msm_mi2s_be_dai_links_aw882xx[] = {
+	{
+		.name = LPASS_BE_PRI_MI2S_RX,
+		.stream_name = "Primary MI2S Playback",
+		.cpu_dai_name = "msm-dai-q6-mi2s.0",
+		.platform_name = "msm-pcm-routing",
+		.num_codecs = ARRAY_SIZE(awinic_codecs),
+		.codecs = awinic_codecs,
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.id = MSM_BACKEND_DAI_PRI_MI2S_RX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+	},
+	{
+		.name = LPASS_BE_PRI_MI2S_TX,
+		.stream_name = "Primary MI2S Capture",
+		.cpu_dai_name = "msm-dai-q6-mi2s.0",
+		.platform_name = "msm-pcm-routing",
+		.num_codecs = ARRAY_SIZE(awinic_codecs),
+		.codecs = awinic_codecs,
+		.no_pcm = 1,
+		.dpcm_capture = 1,
+		.id = MSM_BACKEND_DAI_PRI_MI2S_TX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+	},
+};
+
+static struct snd_soc_dai_link msm_mi2s_be_dai_links_fsm16xx[] = {
+	{
+		.name = LPASS_BE_PRI_MI2S_RX,
+		.stream_name = "Primary MI2S Playback",
+		.cpu_dai_name = "msm-dai-q6-mi2s.0",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "fs16xx.0-0034",
+		.codec_dai_name = "fs16xx-aif",
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.id = MSM_BACKEND_DAI_PRI_MI2S_RX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+	},
+	{
+		.name = LPASS_BE_PRI_MI2S_TX,
+		.stream_name = "Primary MI2S Capture",
+		.cpu_dai_name = "msm-dai-q6-mi2s.0",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "fs16xx.0-0034",
+		.codec_dai_name = "fs16xx-aif",
+		.no_pcm = 1,
+		.dpcm_capture = 1,
+		.id = MSM_BACKEND_DAI_PRI_MI2S_TX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+	},
+};
+
 static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 	{
 		.name = LPASS_BE_PRI_MI2S_RX,
@@ -7741,6 +7820,17 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 				__func__);
 		} else {
 			if (mi2s_audio_intf) {
+				if (get_aw882xx_i2c_probe_status() == 1) {
+					msm_mi2s_be_dai_links[0] =
+						msm_mi2s_be_dai_links_aw882xx[0];
+					msm_mi2s_be_dai_links[1] =
+						msm_mi2s_be_dai_links_aw882xx[1];
+				} else if (fsm_get_probe_status()) {
+					msm_mi2s_be_dai_links[0] =
+						msm_mi2s_be_dai_links_fsm16xx[0];
+					msm_mi2s_be_dai_links[1] =
+						msm_mi2s_be_dai_links_fsm16xx[1];
+				}
 				memcpy(msm_kona_dai_links + total_links,
 					msm_mi2s_be_dai_links,
 					sizeof(msm_mi2s_be_dai_links));

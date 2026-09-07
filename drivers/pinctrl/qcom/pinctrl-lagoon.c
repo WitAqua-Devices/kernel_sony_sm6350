@@ -1617,7 +1617,12 @@ static const struct msm_pingroup lagoon_groups[] = {
 };
 
 static const int lagoon_reserved_gpios[] = {
-	13, 14, 15, 16, 45, 46, 56, 57, -1
+	/*
+	 * Only these four are taken away from the application processor here.
+	 * 45, 46, 56 and 57 are qup02, the SPI the FeliCa secure element sits
+	 * on, and reserving them keeps its controller from probing.
+	 */
+	13, 14, 15, 16, -1
 };
 
 static struct msm_dir_conn lagoon_dir_conn[] = {

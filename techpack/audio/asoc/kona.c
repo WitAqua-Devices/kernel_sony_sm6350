@@ -6297,6 +6297,28 @@ static struct snd_soc_dai_link msm_common_dai_links[] = {
 	},
 };
 
+/*
+ * Targets without WSA speakers use this in place of the bolero WSA feedback
+ * link so that the front end numbering the Sony userspace expects is kept.
+ */
+static struct snd_soc_dai_link msm_pri_mi2s_tx_hostless_fe_dai_links[] = {
+	{/* hw:x,33 */
+		.name = "Primary MI2S TX_Hostless",
+		.stream_name = "Primary MI2S_TX Hostless Capture",
+		.cpu_dai_name = "PRI_MI2S_TX_HOSTLESS",
+		.platform_name = "msm-pcm-hostless",
+		.dynamic = 1,
+		.dpcm_capture = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+				SND_SOC_DPCM_TRIGGER_POST},
+		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+	},
+};
+
 static struct snd_soc_dai_link msm_bolero_fe_dai_links[] = {
 	{/* hw:x,33 */
 		.name = LPASS_BE_WSA_CDC_DMA_TX_0,
@@ -7421,6 +7443,7 @@ static struct snd_soc_dai_link msm_afe_rxtx_lb_be_dai_link[] = {
 
 static struct snd_soc_dai_link msm_kona_dai_links[
 			ARRAY_SIZE(msm_common_dai_links) +
+			ARRAY_SIZE(msm_pri_mi2s_tx_hostless_fe_dai_links) +
 			ARRAY_SIZE(msm_bolero_fe_dai_links) +
 			ARRAY_SIZE(msm_common_misc_fe_dai_links) +
 			ARRAY_SIZE(msm_common_be_dai_links) +
@@ -7637,6 +7660,7 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 	u32 auxpcm_audio_intf = 0;
 	u32 val = 0;
 	u32 wcn_btfm_intf = 0;
+	u32 wsa_max_devs = 0;
 	const struct of_device_id *match;
 
 	match = of_match_node(kona_asoc_machine_of_match, dev->of_node);
@@ -7649,16 +7673,36 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 	if (!strcmp(match->data, "codec")) {
 		card = &snd_soc_card_kona_msm;
 
+		/*
+		 * A target without WSA speakers leaves the wsa-macro node
+		 * without a compatible, so the macro never probes and none of
+		 * its DAIs are registered. Binding the WSA links regardless
+		 * makes the whole card fail to instantiate, so only take them
+		 * where the device tree declares WSA devices.
+		 */
+		rc = of_property_read_u32(dev->of_node, "qcom,wsa-max-devs",
+					  &wsa_max_devs);
+		if (rc)
+			wsa_max_devs = 0;
+
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_common_dai_links,
 		       sizeof(msm_common_dai_links));
 		total_links += ARRAY_SIZE(msm_common_dai_links);
 
-		memcpy(msm_kona_dai_links + total_links,
-		       msm_bolero_fe_dai_links,
-		       sizeof(msm_bolero_fe_dai_links));
-		total_links +=
-			ARRAY_SIZE(msm_bolero_fe_dai_links);
+		if (wsa_max_devs) {
+			memcpy(msm_kona_dai_links + total_links,
+			       msm_bolero_fe_dai_links,
+			       sizeof(msm_bolero_fe_dai_links));
+			total_links +=
+				ARRAY_SIZE(msm_bolero_fe_dai_links);
+		} else {
+			memcpy(msm_kona_dai_links + total_links,
+			       msm_pri_mi2s_tx_hostless_fe_dai_links,
+			       sizeof(msm_pri_mi2s_tx_hostless_fe_dai_links));
+			total_links +=
+				ARRAY_SIZE(msm_pri_mi2s_tx_hostless_fe_dai_links);
+		}
 
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_common_misc_fe_dai_links,
@@ -7670,11 +7714,13 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 		       sizeof(msm_common_be_dai_links));
 		total_links += ARRAY_SIZE(msm_common_be_dai_links);
 
-		memcpy(msm_kona_dai_links + total_links,
-		       msm_wsa_cdc_dma_be_dai_links,
-		       sizeof(msm_wsa_cdc_dma_be_dai_links));
-		total_links +=
-			ARRAY_SIZE(msm_wsa_cdc_dma_be_dai_links);
+		if (wsa_max_devs) {
+			memcpy(msm_kona_dai_links + total_links,
+			       msm_wsa_cdc_dma_be_dai_links,
+			       sizeof(msm_wsa_cdc_dma_be_dai_links));
+			total_links +=
+				ARRAY_SIZE(msm_wsa_cdc_dma_be_dai_links);
+		}
 
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_rx_tx_cdc_dma_be_dai_links,
